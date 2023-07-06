@@ -146,6 +146,7 @@ service GroupController {
     }
 }
 
+// TODO Node服务和Controller服务有何区别？
 service Node {
   rpc NodeStageVolume (NodeStageVolumeRequest)
     returns (NodeStageVolumeResponse) {}
