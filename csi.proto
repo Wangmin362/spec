@@ -196,6 +196,7 @@ message PluginCapability {
       // The presence of this capability determines whether the CO will
       // attempt to invoke the REQUIRED ControllerService RPCs, as well
       // as specific RPCs as indicated by ControllerGetCapabilities.
+      // TODO 当前CSI插件是否支持Controller接口？
       CONTROLLER_SERVICE = 1;
 
       // VOLUME_ACCESSIBILITY_CONSTRAINTS indicates that the volumes for
@@ -213,6 +214,7 @@ message PluginCapability {
       // attempt to invoke the REQUIRED GroupController service RPCs, as
       // well as specific RPCs as indicated by
       // GroupControllerGetCapabilities.
+      // TODO 当前CSI插件是否支持GroupController接口？
       GROUP_CONTROLLER_SERVICE = 3 [(alpha_enum_value) = true];
     }
     Type type = 1;
@@ -245,6 +247,7 @@ message PluginCapability {
       //   upon a node, the Plugin may set the ONLINE volume
       //   expansion capability and implement NodeExpandVolume but not
       //   ControllerExpandVolume.
+      // TODO 什么叫做在线扩容？
       ONLINE = 1;
 
       // OFFLINE indicates that volumes currently published and
@@ -259,6 +262,7 @@ message PluginCapability {
       //   controller-published) volumes, the Plugin may indicate
       //   OFFLINE volume expansion support and implement both
       //   ControllerExpandVolume and NodeExpandVolume.
+      // TODO 什么叫做离线扩容？
       OFFLINE = 2;
     }
     Type type = 1;
@@ -1052,12 +1056,16 @@ message ControllerGetCapabilitiesResponse {
 }
 
 // Specifies a capability of the controller service.
+// TODO 这里的ControllerServiceCapability相当重要，CSI插件可以通过这些属性设置其支持的能力
 message ControllerServiceCapability {
   message RPC {
     enum Type {
       UNKNOWN = 0;
+      // 是否允许创建和删除卷
       CREATE_DELETE_VOLUME = 1;
+      // 是否允许Attach/Detach卷
       PUBLISH_UNPUBLISH_VOLUME = 2;
+      // 是否允许列出当前所有的卷
       LIST_VOLUMES = 3;
       GET_CAPACITY = 4;
       // Currently the only way to consume a snapshot is to create
