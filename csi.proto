@@ -48,60 +48,80 @@ extend google.protobuf.ServiceOptions {
   // releases.
   bool alpha_service = 1060;
 }
+
+// Identity 主要是用于获取CSI插件的名字以及CSI插件具有的能力，从而判断是否能够访问CSI插件的Controller以及GroupController服务
 service Identity {
+  // 主要是获取CSI插件的名字以及版本信息，甚至还包括CSI存储插件的一些元信息
   rpc GetPluginInfo(GetPluginInfoRequest)
     returns (GetPluginInfoResponse) {}
 
+  // 获取当前CSI插件具有那些能力，譬如是否实现了Controller服务，是否可以根据节点的拓扑信息创建卷、是否支持GroupController服务
   rpc GetPluginCapabilities(GetPluginCapabilitiesRequest)
     returns (GetPluginCapabilitiesResponse) {}
 
+  // 用于探测的CSI插件是否已经就绪
   rpc Probe (ProbeRequest)
     returns (ProbeResponse) {}
 }
 
+// Controller服务是CSI插件的核心能力，通过Controller服务，CSI插件可以创建/删除,Attach/Detach
 service Controller {
+  // 创建卷
   rpc CreateVolume (CreateVolumeRequest)
     returns (CreateVolumeResponse) {}
 
+  // 删除卷
   rpc DeleteVolume (DeleteVolumeRequest)
     returns (DeleteVolumeResponse) {}
 
+  // 所谓的PublishVolume，实际上就是我们通常所说的Attach动作
   rpc ControllerPublishVolume (ControllerPublishVolumeRequest)
     returns (ControllerPublishVolumeResponse) {}
 
+  // 所谓的UnpublishVolume，实际上就是我们通常所说的Detach动作
   rpc ControllerUnpublishVolume (ControllerUnpublishVolumeRequest)
     returns (ControllerUnpublishVolumeResponse) {}
 
+  // TODO 什么叫做校验卷的能力？
   rpc ValidateVolumeCapabilities (ValidateVolumeCapabilitiesRequest)
     returns (ValidateVolumeCapabilitiesResponse) {}
 
+  // 列出CSI插件所有的卷
   rpc ListVolumes (ListVolumesRequest)
     returns (ListVolumesResponse) {}
 
+  // 获取卷的大小
   rpc GetCapacity (GetCapacityRequest)
     returns (GetCapacityResponse) {}
 
+  // TODO 获取CSI插件的Controller服务的能力
   rpc ControllerGetCapabilities (ControllerGetCapabilitiesRequest)
     returns (ControllerGetCapabilitiesResponse) {}
 
+  // 创建快照
   rpc CreateSnapshot (CreateSnapshotRequest)
     returns (CreateSnapshotResponse) {}
 
+  // 删除快照
   rpc DeleteSnapshot (DeleteSnapshotRequest)
     returns (DeleteSnapshotResponse) {}
 
+  // 列出所有快照
   rpc ListSnapshots (ListSnapshotsRequest)
     returns (ListSnapshotsResponse) {}
 
+  // 扩容快照
   rpc ControllerExpandVolume (ControllerExpandVolumeRequest)
     returns (ControllerExpandVolumeResponse) {}
 
+  // 获取某个卷
   rpc ControllerGetVolume (ControllerGetVolumeRequest)
     returns (ControllerGetVolumeResponse) {
         option (alpha_method) = true;
     }
 }
 
+// TODO GroupController又是干嘛的？  什么叫做组？
 service GroupController {
   option (alpha_service) = true;
 
@@ -196,7 +216,7 @@ message PluginCapability {
       // The presence of this capability determines whether the CO will
       // attempt to invoke the REQUIRED ControllerService RPCs, as well
       // as specific RPCs as indicated by ControllerGetCapabilities.
-      // TODO 当前CSI插件是否支持Controller接口？
+      // 当前CSI插件是否支持Controller服务，如果支持，那么外部组件就可以通过GRPC调用CSI插件的Controller服务中的接口
       CONTROLLER_SERVICE = 1;
 
       // VOLUME_ACCESSIBILITY_CONSTRAINTS indicates that the volumes for
@@ -205,6 +225,7 @@ message PluginCapability {
       // CreateVolumeRequest along with the topology information
       // returned by NodeGetInfo to ensure that a given volume is
       // accessible from a given node when scheduling workloads.
+      // 所谓的卷可访问行限制指的是，K8S在创建卷时可以通过NodeGetInfo接口获取每隔节点的拓扑信息来决定到底在哪个节点上创建卷。
       VOLUME_ACCESSIBILITY_CONSTRAINTS = 2;
 
       // GROUP_CONTROLLER_SERVICE indicates that the Plugin provides
@@ -214,7 +235,7 @@ message PluginCapability {
       // attempt to invoke the REQUIRED GroupController service RPCs, as
       // well as specific RPCs as indicated by
       // GroupControllerGetCapabilities.
-      // TODO 当前CSI插件是否支持GroupController接口？
+      // 当前CSI插件是否支持GroupController服务，如果支持，那么外部组件就可以通过GRPC调用CSI插件的GroupController服务中的接口
       GROUP_CONTROLLER_SERVICE = 3 [(alpha_enum_value) = true];
     }
     Type type = 1;
@@ -328,6 +349,7 @@ message CreateVolumeRequest {
   // except those containing the following banned characters:
   // U+0000-U+0008, U+000B, U+000C, U+000E-U+001F, U+007F-U+009F.
   // (These are control characters other than commonly used whitespace.)
+  // 创建卷的名字
   string name = 1;
 
   // This field is OPTIONAL. This allows the CO to specify the capacity
@@ -336,6 +358,7 @@ message CreateVolumeRequest {
   // specified it MUST always be honored, even when creating volumes
   // from a source; which MAY force some backends to internally extend
   // the volume after creating it.
+  // 卷的大小
   CapacityRange capacity_range = 2;
 
   // The capabilities that the provisioned volume MUST have. SP MUST
@@ -1067,18 +1090,22 @@ message ControllerServiceCapability {
       PUBLISH_UNPUBLISH_VOLUME = 2;
       // 是否允许列出当前所有的卷
       LIST_VOLUMES = 3;
+      // 获取卷的容量
       GET_CAPACITY = 4;
       // Currently the only way to consume a snapshot is to create
       // a volume from it. Therefore plugins supporting
       // CREATE_DELETE_SNAPSHOT MUST support creating volume from
       // snapshot.
+      // 创建和删除快照
       CREATE_DELETE_SNAPSHOT = 5;
+      // 列出快照
       LIST_SNAPSHOTS = 6;
 
       // Plugins supporting volume cloning at the storage level MAY
       // report this capability. The source volume MUST be managed by
       // the same plugin. Not all volume sources and parameters
       // combinations MAY work.
+      // 克隆卷
       CLONE_VOLUME = 7;
 
       // Indicates the SP supports ControllerPublishVolume.readonly
@@ -1086,12 +1113,14 @@ message ControllerServiceCapability {
       PUBLISH_READONLY = 8;
 
       // See VolumeExpansion for details.
+      // 扩容卷的容量
       EXPAND_VOLUME = 9;
 
       // Indicates the SP supports the
       // ListVolumesResponse.entry.published_node_ids field and the
       // ControllerGetVolumeResponse.published_node_ids field.
       // The SP MUST also support PUBLISH_UNPUBLISH_VOLUME.
+      // TODO 这是什么能力？
       LIST_VOLUMES_PUBLISHED_NODES = 10;
 
       // Indicates that the Controller service can report volume
@@ -1105,11 +1134,13 @@ message ControllerServiceCapability {
       // is the truth.
       // Note that, for alpha, `VolumeCondition` is intended be
       // informative for humans only, not for automation.
+      // TODO 这是什么能力？
       VOLUME_CONDITION = 11 [(alpha_enum_value) = true];
 
       // Indicates the SP supports the ControllerGetVolume RPC.
       // This enables COs to, for example, fetch per volume
       // condition after a volume is provisioned.
+      // TODO 这是什么能力？
       GET_VOLUME = 12 [(alpha_enum_value) = true];
 
       // Indicates the SP supports the SINGLE_NODE_SINGLE_WRITER and/or
@@ -1120,6 +1151,7 @@ message ControllerServiceCapability {
       // use of the SINGLE_NODE_WRITER access mode when either
       // SINGLE_NODE_SINGLE_WRITER and/or SINGLE_NODE_MULTI_WRITER are
       // supported, in order to permit older COs to continue working.
+      // TODO 这是什么能力？
       SINGLE_NODE_MULTI_WRITER = 13 [(alpha_enum_value) = true];
     }
 
