@@ -1085,9 +1085,11 @@ message ControllerServiceCapability {
   message RPC {
     enum Type {
       UNKNOWN = 0;
-      // 是否允许创建和删除卷
+      // 是否支持创建和删除卷
       CREATE_DELETE_VOLUME = 1;
-      // 是否允许Attach/Detach卷
+      // 是否支持Attach/Detach卷，实际上有些存储在使用的时候是不需要提前Attach到节点上，譬如NFS,Samba这类
+      // 的远程文件共享服务。因此不支持Publish/Unpublish动作的CSI插件，Kubelet在PVC创建之后也不会间接
+      // 调用CSI插件的ControllerPublishVolume和ControllerUnpublishVolume方法
       PUBLISH_UNPUBLISH_VOLUME = 2;
       // 是否允许列出当前所有的卷
       LIST_VOLUMES = 3;
