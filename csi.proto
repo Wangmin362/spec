@@ -227,6 +227,7 @@ message PluginCapability {
       // returned by NodeGetInfo to ensure that a given volume is
       // accessible from a given node when scheduling workloads.
       // 所谓的卷可访问行限制指的是，K8S在创建卷时可以通过NodeGetInfo接口获取每隔节点的拓扑信息来决定到底在哪个节点上创建卷。
+      // TODO 这里的访问限制，实际上是CSI插件是否支持根据拓扑信息创建Volume
       VOLUME_ACCESSIBILITY_CONSTRAINTS = 2;
 
       // GROUP_CONTROLLER_SERVICE indicates that the Plugin provides
@@ -479,7 +480,8 @@ message VolumeCapability {
 
       // Can only be published once as read/write on a single node, at
       // any given time.
-      // 可以允许卷挂载在单个节点上，并且支持读和写
+      // 1、可以允许卷挂载在单个节点上，并且支持读和写
+      // 2、SINGLE_NODE_WRITER模式的含义并不清晰，因此后面扩展了SINGLE_NODE_SINGLE_WRITER以及SINGLE_NODE_MULTI_WRITER模式
       SINGLE_NODE_WRITER = 1;
 
       // Can only be published once as readonly on a single node, at
@@ -505,14 +507,14 @@ message VolumeCapability {
       // on a single node, at any given time. SHOULD be used instead of
       // SINGLE_NODE_WRITER for COs using the experimental
       // SINGLE_NODE_MULTI_WRITER capability.
-      // TODO 如何理解这种挂载读写方式
+      // 这种模式其实并不难理解，那就是持久卷可以挂载到单个节点上，于此同时，同一时间只允许一个Pod对于持久卷发起读写动作
       SINGLE_NODE_SINGLE_WRITER = 6 [(alpha_enum_value) = true];
 
       // Can be published as read/write at multiple workloads on a
       // single node simultaneously. SHOULD be used instead of
       // SINGLE_NODE_WRITER for COs using the experimental
       // SINGLE_NODE_MULTI_WRITER capability.
-      // TODO 如何理解这种挂载读写方式
+      // 这种模式其实并不难理解，那就是持久卷可以挂载到单个节点上，于此同时，同一时间允许多个Pod对于持久卷发起读写动作
       SINGLE_NODE_MULTI_WRITER = 7 [(alpha_enum_value) = true];
     }
 
