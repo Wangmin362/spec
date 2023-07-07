@@ -810,6 +810,7 @@ message ControllerPublishVolumeRequest {
   // CO MUST set this field to false if SP does not have the
   // PUBLISH_READONLY controller capability.
   // This is a REQUIRED field.
+  // TODO 如何理解这个字段？
   bool readonly = 4;
 
   // Secrets required by plugin to complete controller publish volume
@@ -1121,6 +1122,7 @@ message ControllerServiceCapability {
 
       // Indicates the SP supports ControllerPublishVolume.readonly
       // field.
+      // TODO 如何理解这个能力？
       PUBLISH_READONLY = 8;
 
       // See VolumeExpansion for details.
