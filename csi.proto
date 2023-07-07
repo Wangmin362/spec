@@ -472,39 +472,47 @@ message VolumeCapability {
   }
 
   // Specify how a volume can be accessed.
+  // 卷的访问模式
   message AccessMode {
     enum Mode {
       UNKNOWN = 0;
 
       // Can only be published once as read/write on a single node, at
       // any given time.
+      // 可以允许卷挂载在单个节点上，并且支持读和写
       SINGLE_NODE_WRITER = 1;
 
       // Can only be published once as readonly on a single node, at
       // any given time.
+      // 允许卷挂载在单个节点上并且只允许读
       SINGLE_NODE_READER_ONLY = 2;
 
       // Can be published as readonly at multiple nodes simultaneously.
+      // 允许卷以只读的方式挂载到单个节点上
       MULTI_NODE_READER_ONLY = 3;
 
       // Can be published at multiple nodes simultaneously. Only one of
       // the node can be used as read/write. The rest will be readonly.
+      // 允许卷以读写的方式同时挂载到多个节点上，但是在同一时间只允许一个节点进行同时读写
       MULTI_NODE_SINGLE_WRITER = 4;
 
       // Can be published as read/write at multiple nodes
       // simultaneously.
+      // 允许卷以读写的方式挂载到多个节点上，并且支持多个节点同时读写卷
       MULTI_NODE_MULTI_WRITER = 5;
 
       // Can only be published once as read/write at a single workload
       // on a single node, at any given time. SHOULD be used instead of
       // SINGLE_NODE_WRITER for COs using the experimental
       // SINGLE_NODE_MULTI_WRITER capability.
+      // TODO 如何理解这种挂载读写方式
       SINGLE_NODE_SINGLE_WRITER = 6 [(alpha_enum_value) = true];
 
       // Can be published as read/write at multiple workloads on a
       // single node simultaneously. SHOULD be used instead of
       // SINGLE_NODE_WRITER for COs using the experimental
       // SINGLE_NODE_MULTI_WRITER capability.
+      // TODO 如何理解这种挂载读写方式
       SINGLE_NODE_MULTI_WRITER = 7 [(alpha_enum_value) = true];
     }
 
