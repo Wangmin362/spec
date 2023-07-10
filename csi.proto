@@ -50,6 +50,7 @@ extend google.protobuf.ServiceOptions {
 }
 
 // Identity 主要是用于获取CSI插件的名字以及CSI插件具有的能力，从而判断是否能够访问CSI插件的Controller以及GroupController服务
+// 1、要想实现一个CSI插件，那么Identity服务是必须实现的
 service Identity {
   // 主要是获取CSI插件的名字以及版本信息，甚至还包括CSI存储插件的一些元信息
   rpc GetPluginInfo(GetPluginInfoRequest)
@@ -65,6 +66,7 @@ service Identity {
 }
 
 // Controller服务是CSI插件的核心能力，通过Controller服务，CSI插件可以创建/删除,Attach/Detach
+// 1、对于一个CSI插件来说，Controller服务可以选择性的实现
 service Controller {
   // 创建卷
   rpc CreateVolume (CreateVolumeRequest)
@@ -147,6 +149,7 @@ service GroupController {
 }
 
 // TODO Node服务和Controller服务有何区别？
+// 1、若需要实现一个CSI插件，那么必须实现Node服务
 service Node {
   rpc NodeStageVolume (NodeStageVolumeRequest)
     returns (NodeStageVolumeResponse) {}
@@ -167,7 +170,7 @@ service Node {
   rpc NodeExpandVolume(NodeExpandVolumeRequest)
     returns (NodeExpandVolumeResponse) {}
 
-
+  // 获取Node上的能力
   rpc NodeGetCapabilities (NodeGetCapabilitiesRequest)
     returns (NodeGetCapabilitiesResponse) {}
 
@@ -227,7 +230,9 @@ message PluginCapability {
       // returned by NodeGetInfo to ensure that a given volume is
       // accessible from a given node when scheduling workloads.
       // 所谓的卷可访问行限制指的是，K8S在创建卷时可以通过NodeGetInfo接口获取每隔节点的拓扑信息来决定到底在哪个节点上创建卷。
-      // TODO 这里的访问限制，实际上是CSI插件是否支持根据拓扑信息创建Volume
+      // TODO 这里的访问限制，实际上是CSI插件是否支持根据拓扑信息创建Volume，简单来说，如果CSI拥有此能力，那么
+      // CSI插件可以更加智能的根据拓扑信息再合适的位置创建Volume
+      // 可以参考：https://kubernetes-csi.github.io/docs/topology.html
       VOLUME_ACCESSIBILITY_CONSTRAINTS = 2;
 
       // GROUP_CONTROLLER_SERVICE indicates that the Plugin provides
@@ -812,7 +817,7 @@ message ControllerPublishVolumeRequest {
   // CO MUST set this field to false if SP does not have the
   // PUBLISH_READONLY controller capability.
   // This is a REQUIRED field.
-  // TODO 如何理解这个字段？
+  //
   bool readonly = 4;
 
   // Secrets required by plugin to complete controller publish volume
@@ -1096,7 +1101,7 @@ message ControllerServiceCapability {
   message RPC {
     enum Type {
       UNKNOWN = 0;
-      // 是否支持创建和删除卷
+      // 表示CSI插件是否可以支持动态创建和删除卷
       CREATE_DELETE_VOLUME = 1;
       // 是否支持Attach/Detach卷，实际上有些存储在使用的时候是不需要提前Attach到节点上，譬如NFS,Samba这类
       // 的远程文件共享服务。因此不支持Publish/Unpublish动作的CSI插件，Kubelet在PVC创建之后也不会间接
@@ -1110,7 +1115,7 @@ message ControllerServiceCapability {
       // a volume from it. Therefore plugins supporting
       // CREATE_DELETE_SNAPSHOT MUST support creating volume from
       // snapshot.
-      // 创建和删除快照
+      // 表示CSI插件是否支持动态创建和删除Volume快照
       CREATE_DELETE_SNAPSHOT = 5;
       // 列出快照
       LIST_SNAPSHOTS = 6;
@@ -1135,7 +1140,9 @@ message ControllerServiceCapability {
       // ListVolumesResponse.entry.published_node_ids field and the
       // ControllerGetVolumeResponse.published_node_ids field.
       // The SP MUST also support PUBLISH_UNPUBLISH_VOLUME.
-      // TODO 这是什么能力？
+      // TODO 这是什么能力？ 看起来这个能力应该是LIST_VOLUMES的子集，LIST_VOLUME能力应该是获取
+      // 当前CSI存储插件所有创建的Volume，而此特性应该是从所有创建的Volume当中找到那些已经Attach到
+      // 节点上的卷。
       LIST_VOLUMES_PUBLISHED_NODES = 10;
 
       // Indicates that the Controller service can report volume
@@ -1596,6 +1603,7 @@ message NodeServiceCapability {
   message RPC {
     enum Type {
       UNKNOWN = 0;
+      // 表示CSI插件是否实现了Node服务的NodeStateVolume以及NodeUnstateVolume接口
       STAGE_UNSTAGE_VOLUME = 1;
       // If Plugin implements GET_VOLUME_STATS capability
       // then it MUST implement NodeGetVolumeStats RPC
