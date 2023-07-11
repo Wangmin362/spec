@@ -1124,7 +1124,7 @@ message ControllerServiceCapability {
       // report this capability. The source volume MUST be managed by
       // the same plugin. Not all volume sources and parameters
       // combinations MAY work.
-      // 克隆卷
+      // TODO 克隆卷是什么能力？
       CLONE_VOLUME = 7;
 
       // Indicates the SP supports ControllerPublishVolume.readonly
