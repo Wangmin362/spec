@@ -416,6 +416,7 @@ message CreateVolumeRequest {
 
 // Specifies what source the volume will be created from. One of the
 // type fields MUST be specified.
+// TODO 这玩意干啥的？
 message VolumeContentSource {
   message SnapshotSource {
     // Contains identity information for the existing source snapshot.
