@@ -372,6 +372,7 @@ message CreateVolumeRequest {
   // U+0000-U+0008, U+000B, U+000C, U+000E-U+001F, U+007F-U+009F.
   // (These are control characters other than commonly used whitespace.)
   // 创建卷的名字
+  // 2、TODO 对于K8S来说，猜测这里的名字应该是PV的名字
   string name = 1;
 
   // This field is OPTIONAL. This allows the CO to specify the capacity
@@ -402,6 +403,7 @@ message CreateVolumeRequest {
   // Plugin specific parameters passed in as opaque key-value pairs.
   // This field is OPTIONAL. The Plugin is responsible for parsing and
   // validating these parameters. COs will treat these as opaque.
+  // 不同类型的底层存储原理实现的并不一样，需要的参数也不尽相同，没有办法同意出来。因此这里使用MAP代替
   map<string, string> parameters = 4;
 
   // Secrets required by plugin to complete volume creation request.
@@ -429,6 +431,7 @@ message CreateVolumeRequest {
 
 // Specifies what source the volume will be created from. One of the
 // type fields MUST be specified.
+// TODO 这玩意干啥的？
 message VolumeContentSource {
   message SnapshotSource {
     // Contains identity information for the existing source snapshot.
@@ -469,6 +472,7 @@ message VolumeCapability {
   message MountVolume {
     // The filesystem type. This field is OPTIONAL.
     // An empty string is equal to an unspecified field value.
+    // 用于指定文件系统的类型
     string fs_type = 1;
 
     // The mount options that can be used for the volume. This field is
@@ -556,6 +560,11 @@ message VolumeCapability {
 // The capacity of the storage space in bytes. To specify an exact size,
 // `required_bytes` and `limit_bytes` SHALL be set to the same value. At
 // least one of the these fields MUST be specified.
+// 1、CSI底层存储在创建卷的时候可能某些特殊原因或者技术限制，并不能创建用户指定容量大小的持久卷，二是可能会大一些。我猜测跟操作系统保存文件是
+// 一个道理，譬如你需要保存一个文件，但是这个文件只有20个字节。但是操作系统是以块为单位存储文件的，最小是4KB，因此这个20个字节的文件，实际上
+// 占用了4KB的文件大小。
+// 2、猜测这里的容量参数的定义也是类似的考虑，required_bytes是用户想要申请的卷的大小，而limit_bytes则是用户限制底层的存储系统创建卷大小
+// 的参数。如果用户需要申请4KB大小的存储卷，但是存储系统却直接给了一个1MB的大小的存储卷，也不合适
 message CapacityRange {
   // Volume MUST be at least this big. This field is OPTIONAL.
   // A value of 0 is equal to an unspecified field value.
