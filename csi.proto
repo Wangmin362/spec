@@ -76,15 +76,21 @@ service Controller {
   rpc DeleteVolume (DeleteVolumeRequest)
     returns (DeleteVolumeResponse) {}
 
-  // 所谓的PublishVolume，实际上就是我们通常所说的Attach动作
+  // 1、所谓的PublishVolume，实际上就是我们通常所说的Attach动作
+  // 2、这个接口只针对于块存储，文件存储不需要调用此接口。
+  // 3、所谓的Attach动作其实就是把块储存插入到主机上，有点类似于一个硬盘在使用之前必须要先插入到主机上。Attach动作其实就是干了这个事情。而
+  // 对于文件类型的存储而言，我们是可以挂载到主机上直接使用的，因此不需要这个步骤。
+  // 4、常见的文件类型的存储有：nfs, samba等存储。常见的块存储有：ceph
   rpc ControllerPublishVolume (ControllerPublishVolumeRequest)
     returns (ControllerPublishVolumeResponse) {}
 
-  // 所谓的UnpublishVolume，实际上就是我们通常所说的Detach动作
+  // 1、所谓的UnpublishVolume，实际上就是我们通常所说的Detach动作
+  // 2、同样此接口也只针对于块存储，文件类型的存储不需要调用此接口
+  // 3、所谓的Detach，其实就是把块存储从主机上卸载掉。这个卸载的动作其实就是：把磁盘从主机上拔掉
   rpc ControllerUnpublishVolume (ControllerUnpublishVolumeRequest)
     returns (ControllerUnpublishVolumeResponse) {}
 
-  // TODO 什么叫做校验卷的能力？
+  // 根据参数校验当前存储卷的呢能力
   rpc ValidateVolumeCapabilities (ValidateVolumeCapabilitiesRequest)
     returns (ValidateVolumeCapabilitiesResponse) {}
 
@@ -96,11 +102,13 @@ service Controller {
   rpc GetCapacity (GetCapacityRequest)
     returns (GetCapacityResponse) {}
 
-  // TODO 获取CSI插件的Controller服务的能力
+  // 获取CSI插件的Controller服务的能力，更加直白一点就是，获取当前CSI插件实现了哪些接口。csi-attacher/csi-provisioner/csi-resizer/
+  // csi-snapshotter等插件在调用ControllerService其它接口时，需要先调用此接口用于判断当前CSI插件是否实现了该接口
   rpc ControllerGetCapabilities (ControllerGetCapabilitiesRequest)
     returns (ControllerGetCapabilitiesResponse) {}
 
-  // 创建快照
+  // 1、创建快照，所谓的快照，其实就是当前时刻的数据备份   TODO 如果我作为一个存储厂商，如果保证可以最快的（特别是在数据量特别大的情况下）备份当前数据快照？
+  // 2、快照的作用其实就是数据恢复，譬如某服务突然崩了，此时我们可以通过快照把数据恢复到备份的时间点
   rpc CreateSnapshot (CreateSnapshotRequest)
     returns (CreateSnapshotResponse) {}
 
@@ -151,15 +159,22 @@ service GroupController {
 // TODO Node服务和Controller服务有何区别？
 // 1、若需要实现一个CSI插件，那么必须实现Node服务
 service Node {
+  // 1、此接口也是针对于块存储而言的。
+  // 2、此接口调用后，CSI插件需要格式化指定的块存储，于此同时会格式化好的块存储挂载到global目录
+  // 3、此接口调用后，此存储在node上时可见的，但是在pod内暂时还不可见
   rpc NodeStageVolume (NodeStageVolumeRequest)
     returns (NodeStageVolumeResponse) {}
 
+  // 1、此接口也是针对于块存储而言的。
+  // 2、此接口调用后，CSI插件需要把指定的块存储从global目录卸载
   rpc NodeUnstageVolume (NodeUnstageVolumeRequest)
     returns (NodeUnstageVolumeResponse) {}
 
+  // 1、此接口调用后，CSI插件需要把存储卷挂载到pod内部，此时对于pod而言，改存储卷就是可见的
   rpc NodePublishVolume (NodePublishVolumeRequest)
     returns (NodePublishVolumeResponse) {}
 
+  // 1、从pod内卸载存储卷
   rpc NodeUnpublishVolume (NodeUnpublishVolumeRequest)
     returns (NodeUnpublishVolumeResponse) {}
 
